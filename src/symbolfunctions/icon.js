@@ -1,6 +1,5 @@
-//Icon ##################################################################################
-import { ms } from "../ms.js";
-export default function icon() {
+//Icon #################################################################################
+export default function icon(ms) {
   var drawArray1 = [];
   var drawArray2 = [];
   var gbbox = new ms.BBox({ x1: 50, x2: 150, y1: 50, y2: 150 });
@@ -28,11 +27,12 @@ export default function icon() {
     var white = this.colors.white[this.metadata.affiliation];
     //Store previous used icons in memory.
     var icnet =
-      (ms._STD2525 ? "2525" : "APP6") +
+      (this.metadata.STD2525 ? "2525" : "APP6") +
       "," +
       this.metadata.dimension +
       this.metadata.affiliation +
       this.metadata.notpresent +
+      this.metadata.numberSIDC +
       ",frame:" +
       this.style.frame +
       ",alternateMedal:" +
@@ -56,10 +56,10 @@ export default function icon() {
       iconParts = ms._iconCache[icnet].iconParts;
     } else {
       ms._iconCache[icnet] = {};
-      iconParts = ms._iconCache[icnet].iconParts = ms._geticnParts(
+      iconParts = ms._iconCache[icnet].iconParts = ms._getIconParts(
         this.metadata,
         this.colors,
-        ms._STD2525,
+        this.metadata.STD2525,
         this.style.monoColor,
         this.style.alternateMedal
       );
@@ -85,10 +85,11 @@ export default function icon() {
         icons = ms._iconCache[icnet].letterSIDC.icons;
         specialbbox = ms._iconCache[icnet].letterSIDC.bbox;
       } else {
-        if (typeof ms._getLetterSIDCicn === "function") {
-          ms._iconCache[icnet].letterSIDC = ms._getLetterSIDCicn(
+        if (typeof ms._getIcons.letter === "function") {
+          ms._iconCache[icnet].letterSIDC = ms._getIcons.letter(
+            ms,
             iconParts,
-            ms._STD2525
+            this.metadata.STD2525
           );
           icons = ms._iconCache[icnet].letterSIDC.icons;
           specialbbox = ms._iconCache[icnet].letterSIDC.bbox;
@@ -129,7 +130,7 @@ export default function icon() {
 		*/
         } else {
           console.warn(
-            "ms._getLetterSIDCicn() is not present, you will need to load functionality for letter based SIDCs"
+            "ms._getIcons.letter() is not present, you will need to load functionality for letter based SIDCs"
           );
         }
       }
@@ -149,10 +150,15 @@ export default function icon() {
           specialbbox =
             ms._iconCache[icnet].numberSIDC.symbolSet[symbolSet].bbox;
         } else {
-          if (typeof ms._getNumberSIDCicn === "function") {
+          if (typeof ms._getIcons.number === "function") {
             ms._iconCache[icnet].numberSIDC.symbolSet[
               symbolSet
-            ] = ms._getNumberSIDCicn(symbolSet, iconParts, ms._STD2525);
+            ] = ms._getIcons.number(
+              ms,
+              symbolSet,
+              iconParts,
+              this.metadata.STD2525
+            );
             icons = ms._iconCache[icnet].numberSIDC.symbolSet[symbolSet].icons;
             m1 = ms._iconCache[icnet].numberSIDC.symbolSet[symbolSet].m1;
             m2 = ms._iconCache[icnet].numberSIDC.symbolSet[symbolSet].m2;
@@ -160,17 +166,22 @@ export default function icon() {
               ms._iconCache[icnet].numberSIDC.symbolSet[symbolSet].bbox;
           } else {
             console.warn(
-              "ms._getNumberSIDCicn() is not present, you will need to load functionality for number based SIDCs"
+              "ms._getIcons.number() is not present, you will need to load functionality for number based SIDCs"
             );
           }
         }
       } else {
         ms._iconCache[icnet].numberSIDC = {};
         ms._iconCache[icnet].numberSIDC.symbolSet = {};
-        if (typeof ms._getNumberSIDCicn === "function") {
+        if (typeof ms._getIcons.number === "function") {
           ms._iconCache[icnet].numberSIDC.symbolSet[
             symbolSet
-          ] = ms._getNumberSIDCicn(symbolSet, iconParts, ms._STD2525);
+          ] = ms._getIcons.number(
+            ms,
+            symbolSet,
+            iconParts,
+            this.metadata.STD2525
+          );
           icons = ms._iconCache[icnet].numberSIDC.symbolSet[symbolSet].icons;
           m1 = ms._iconCache[icnet].numberSIDC.symbolSet[symbolSet].m1;
           m2 = ms._iconCache[icnet].numberSIDC.symbolSet[symbolSet].m2;
@@ -216,7 +227,7 @@ export default function icon() {
 					}*/
         } else {
           console.warn(
-            "ms._getNumberSIDCicn() is not present, you will need to load functionality for number based SIDCs"
+            "ms._getIcons.number() is not present, you will need to load functionality for number based SIDCs"
           );
         }
       }
@@ -236,12 +247,15 @@ export default function icon() {
     if (this.metadata.numberSIDC) {
       //Number based SIDC
       var mainIcon = icons[this.metadata.functionid.substr(0, 6)]; //Main symbol
-
-      if (typeof mainIcon === "undefined") {
+      //*
+      if (
+        typeof mainIcon === "undefined" &&
+        this.metadata.functionid.substr(4, 2) >= 95
+      ) {
         //We have some special entity subtype and will try to find original symbol.
         mainIcon = icons[this.metadata.functionid.substr(0, 4) + "00"];
       }
-
+      //*/
       if (typeof mainIcon === "undefined") {
         if (
           !(
@@ -283,7 +297,6 @@ export default function icon() {
         // End special case, just add to draw array
         drawArray2.push(mainIcon);
       }
-
       if (specialbbox.hasOwnProperty(this.metadata.functionid.substr(0, 6))) {
         gbbox = new ms.BBox(specialbbox[this.metadata.functionid.substr(0, 6)]);
       }
@@ -298,21 +311,32 @@ export default function icon() {
       if (this.metadata.functionid.substr(4, 2) == "98")
         drawArray2.push(iconParts["GR.IC.FF.THEATRE SUPPORT"]);
       //Modifier 1
-      var modifier1 =
-        this.metadata.functionid.substr(6, 2) != "00"
-          ? m1[this.metadata.functionid.substr(6, 2)] || []
-          : [];
-      if (modifier1.length) {
-        drawArray2.push(modifier1);
+      if (this.metadata.functionid.substr(6, 2) != "00") {
+        var modifier1 = m1[this.metadata.functionid.substr(6, 2)];
+        if (typeof modifier1 === "undefined") {
+          this.validIcon = false;
+        } else {
+          drawArray2.push(modifier1);
+        }
       }
+
       //Modifier 2
+      if (this.metadata.functionid.substr(8, 2) != "00") {
+        var modifier2 = m2[this.metadata.functionid.substr(8, 2)];
+        if (typeof modifier2 === "undefined") {
+          this.validIcon = false;
+        } else {
+          drawArray2.push(modifier2);
+        }
+      }
+      /*
       var modifier2 =
         this.metadata.functionid.substr(8, 2) != "00"
           ? m2[this.metadata.functionid.substr(8, 2)] || []
           : [];
       if (modifier2.length) {
         drawArray2.push(modifier2);
-      }
+      }*/
     } else {
       //Letter based SIDC
       var genericSIDC =
@@ -321,7 +345,7 @@ export default function icon() {
         this.options.sidc.substr(2, 1) +
         "-" +
         this.options.sidc.substr(4, 6);
-      if (icons[genericSIDC]) {
+      if (icons.hasOwnProperty(genericSIDC)) {
         drawArray2.push(icons[genericSIDC]);
       } else {
         if (
@@ -332,7 +356,7 @@ export default function icon() {
         ) {
           drawArray2.push(undefinedIcon);
           this.validIcon = false;
-          //console.log("Invalid icon code in SIDC: " + this.options.sidc);
+          //console.info("Invalid icon code in SIDC: " + this.options.sidc);
         }
       }
       if (specialbbox[genericSIDC]) {
@@ -341,7 +365,11 @@ export default function icon() {
     }
   }
   //outline
-  if (!(this.style.frame && this.style.fill) || this.style.monoColor) {
+  if (
+    !(this.style.frame && this.metadata.fill) ||
+    this.style.monoColor ||
+    this.metadata.controlMeasure
+  ) {
     if (this.style.outlineWidth > 0)
       drawArray1.push(
         ms.outline(

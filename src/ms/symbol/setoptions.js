@@ -26,7 +26,7 @@ export default function setOptions() {
   this.validIcon = true;
 
   //Updating the object with metadata of the symbol
-  this.metadata = this.getProperties();
+  this.metadata = this.getMetadata();
 
   //Updating the object with colors
   this.colors = this.getColors();
@@ -37,7 +37,8 @@ export default function setOptions() {
   //Processing all parts of the symbol, adding them to the drawinstruction and updating the boundingbox
   for (i in ms._symbolParts) {
     if (!ms._symbolParts.hasOwnProperty(i)) continue;
-    var m = ms._symbolParts[i].call(this);
+    var m = ms._symbolParts[i].call(this, ms);
+    var notEmpty = m.pre.length > 0 || m.post.length > 0;
     if (!m.pre) continue;
     if (m.pre.length > 0) {
       while (m.pre.length == 1) {
@@ -50,14 +51,27 @@ export default function setOptions() {
     if (m.post.length > 0) {
       while (m.post.length == 1) {
         m.post = m.post[0];
+        if (typeof m.post == "undefined") break;
       }
-      if (m.post.length != 0) {
+      if (typeof m.post == "undefined" || m.post.length != 0) {
+        /*
+        You might think it is strange to add it if it is undefined, and you are correct. 
+        But this makes it possible to find invalid symbols using the isValid function.
+        //*/
         this.drawInstructions = this.drawInstructions.concat(m.post);
       }
     }
-    if (typeof m.bbox === "object") {
+    if (typeof m.bbox === "object" && notEmpty) {
       this.bbox.merge(m.bbox);
     }
+  }
+
+  if (this.style.padding) {
+    // if set, add extra padding
+    this.bbox.x1 -= this.style.padding;
+    this.bbox.x2 += this.style.padding;
+    this.bbox.y1 -= this.style.padding;
+    this.bbox.y2 += this.style.padding;
   }
 
   var anchor = { x: 100, y: 100 };
@@ -79,10 +93,10 @@ export default function setOptions() {
   };
   //If it is a headquarters the anchor should be at the end of the staf
   if (this.metadata.headquarters) {
-    var hqStafLength = this.style.hqStafLength || ms._hqStafLength;
+    var hqStaffLength = this.style.hqStaffLength || ms._hqStaffLength;
     anchor = {
       x: this.metadata.baseGeometry.bbox.x1,
-      y: this.metadata.baseGeometry.bbox.y2 + hqStafLength
+      y: this.metadata.baseGeometry.bbox.y2 + hqStaffLength
     };
   }
 
@@ -125,7 +139,12 @@ export default function setOptions() {
       100
   };
 
-  if (ms.autoSVG) this.asSVG();
+  //if (ms._autoSVG) this.asSVG();
+  if (ms._autoValidation)
+    if (!this.isValid()) {
+      console.warn("Error in symbol: " + this.options.sidc);
+      console.warn(this.isValid(true));
+    }
 
   return this;
 }

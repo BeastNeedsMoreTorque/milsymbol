@@ -14,8 +14,15 @@
 * Added support for the field installationComposition as specified in APP-6 D
 * Added possiblity to control more color on symbol level
 * Support for speed leaders
+* Support for text background color using infoBackground and infoBackgroundFrame options
 
 ### Changed
+
+* `symbol.getProperties()` is removed and `symbol.getMetadata()` should be used instead.
+
+* ms.getHqStafLength changed to ms.getHqStaffLength, fixed spelling
+
+* ms.setHqStafLength changed to ms.setHqStaffLength, fixed spelling
 
 * Thanks to @okwolf we moved from webpack to rollup for development
 
@@ -31,6 +38,10 @@
 
 ### Removed
 
+* `symbol.getProperties()` is removed (use `symbol.getMetadata()` instead)
+
+* `ms.setAutoSVG` has now been removed.
+
 ### Fixed
 
 * Fields commonIdentifier (AF) and equipmentTeardownTime (AE) had swiched
@@ -39,6 +50,8 @@
 * The condition bar is now drawn below the headquartersElement field
 
 ### Security
+
+* Prevented XSS issue where malicious code could be inserted into text fields of SVG symbols, all < and > are now encoded to prevent this.
 
 ## 1.3.3 14 NOV 2017
 
@@ -55,7 +68,7 @@
 ### Fixed
 
 * The option infoColor was not set when used, this is now fixed, again.
-* The option hqStafLength was not set when used, this is now fixed.
+* The option hqStaffLength was not set when used, this is now fixed.
 * Fill opacity affected outline opacity as well in canvas output.
 
 ### Security
@@ -159,8 +172,7 @@
 
 ### Added
 
-* Added build-amd, to build an AMD only module you can now run `npm run
-  build-amd`
+* Added build-amd, to build an AMD only module you can now run `npm run build-amd`
 
 ### Changed
 
@@ -298,8 +310,7 @@ reorganization.
 
 * Avoid setting properties directly, use setOptions(options) instead.
 
-* Do not use .XML anymore, use asSVG() instead, **if needed set `ms.autoSVG =
-  true`**. ms.autoSVG will be removed in a future version.
+* Do not use .XML anymore, use asSVG() instead, **if needed set `ms.autoSVG = true`**. ms.autoSVG will be removed in a future version.
 
 * getMarker(), it's not needed anymore, symbols are automatically updated when
   options are updated using setOptions().

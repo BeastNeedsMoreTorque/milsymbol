@@ -1,4 +1,10 @@
-// Icon parts for SIGNALS INTELLIGENCE
+import {
+  defaultProperties,
+  text,
+  textm1,
+  textm2
+} from "./iconparts-functions.js";
+
 export default function(
   iconParts,
   metadata,
@@ -23,24 +29,6 @@ export default function(
   alternateMedal
   true/false for sea mine stuff
   */
-  function textm1(str) {
-    var size = 30;
-    if (str.length == 3) {
-      size = 25;
-    }
-    if (str.length >= 4) {
-      size = 22;
-    }
-    return {
-      type: "text",
-      stroke: false,
-      textanchor: "middle",
-      x: 100,
-      y: 77,
-      fontsize: size,
-      text: str
-    };
-  }
 
   var affiliation = metadata.affiliation || "Friend";
   //If hostile and not monoColor, make it red, otherwise use the iconColor.
@@ -62,6 +50,8 @@ export default function(
     d: "m 115,90 -15,15 0,-15 -15,15 M 80,85 c 0,25 15,35 35,35",
     fill: false
   };
+  icn["SI.I.JAMMER / ELECTRONIC COUNTER-MEASURES"] = text("J");
+
   icn["SI.M1.ANTI-AIRCRAFT FIRE CONTROL"] = textm1("AA");
   icn["SI.M1.AIRBORNE SEARCH AND BOMBING"] = textm1("AB");
   icn["SI.M1.AIRBORNE INTERCEPT"] = textm1("AI");
@@ -74,6 +64,7 @@ export default function(
   icn["SI.M1.CONTROLLED INTERCEPT"] = textm1("CI");
   icn["SI.M1.CELLULAR/MOBILE"] = textm1("CM");
   icn["SI.M1.COASTAL SURVEILLANCE"] = textm1("CS");
+  icn["SI.M1.CYBER"] = textm1("CYB");
   icn["SI.M1.DECOY/MIMIC"] = textm1("DC");
   icn["SI.M1.DATA TRANSMISSION"] = textm1("DT");
   icn["SI.M1.EARTH SURVEILLANCE"] = textm1("ES");
@@ -262,6 +253,7 @@ export default function(
     fontsize: 25,
     text: "C"
   };
+  icn["SI.M2.CYBER"] = textm2("CYB");
   icn["SI.M2.DELTA"] = {
     type: "text",
     stroke: false,
@@ -383,33 +375,10 @@ export default function(
     text: "G"
   };
 
-  function defaultProperties(instructions) {
-    if (typeof instructions === "object") {
-      if (Array.isArray(instructions)) {
-        for (var i = 0; i < instructions.length; i++) {
-          defaultProperties.call(this, instructions[i]);
-        }
-        return;
-      }
-      instructions.icon = true;
-      if (instructions.type == "text") {
-        if (!instructions.hasOwnProperty("fontfamily"))
-          instructions.fontfamily = "Arial";
-        if (!instructions.hasOwnProperty("fontweight"))
-          instructions.fontweight = "bold";
-        if (!instructions.hasOwnProperty("textanchor"))
-          instructions.textanchor = "middle";
-        if (!instructions.hasOwnProperty("stroke")) instructions.stroke = false;
-      }
-      if (!instructions.hasOwnProperty("fill")) instructions.fill = iconColor;
-      if (!instructions.hasOwnProperty("stroke"))
-        instructions.stroke = iconColor;
-      return;
-    }
-  }
   for (var key in icn) {
     if (!icn.hasOwnProperty(key)) continue;
-    defaultProperties.call(this, icn[key]);
+    if (iconParts.hasOwnProperty(key)) console.warn("Override of: " + key);
+    defaultProperties.call(this, icn[key], iconColor);
     iconParts[key] = icn[key];
   }
 }

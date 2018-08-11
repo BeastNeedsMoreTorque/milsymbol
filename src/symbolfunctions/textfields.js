@@ -1,6 +1,5 @@
 //Text Fields ############################################################################
-import { ms } from "../ms.js";
-export default function textfields() {
+export default function textfields(ms) {
   var drawArray1 = [];
   var drawArray2 = [];
   var bbox = this.metadata.baseGeometry.bbox;
@@ -10,8 +9,17 @@ export default function textfields() {
       : this.style.infoColor) ||
     this.colors.iconColor[this.metadata.affiliation] ||
     this.colors.iconColor["Friend"];
-  var fontFamily = "Arial";
+  var fontFamily = this.style.fontfamily;
   var fontSize = this.style.infoSize;
+
+  var infoBackground =
+    typeof this.style.infoBackground === "object"
+      ? this.style.infoBackground[this.metadata.affiliation]
+      : this.style.infoBackground;
+  var infoBackgroundFrame =
+    typeof this.style.infoBackground === "object"
+      ? this.style.infoBackground[this.metadata.affiliation]
+      : this.style.infoBackground;
 
   var gbbox = new ms.BBox();
   var spaceTextIcon = 20; //The distance between the Icon and the labels
@@ -21,7 +29,7 @@ export default function textfields() {
     var texts = [];
     var labelbox;
     for (var i in label) {
-      if (this.hasOwnProperty(i) && this[i] != "") {
+      if (this.options.hasOwnProperty(i) && this.options[i] != "") {
         if (!label.hasOwnProperty(i)) continue;
         for (var j = 0; j < (label[i].length || 1); j++) {
           var lbl;
@@ -33,20 +41,23 @@ export default function textfields() {
           labelbox = { y2: lbl.y, y1: lbl.y - lbl.fontsize };
           if (lbl.textanchor == "start") {
             labelbox.x1 = lbl.x;
-            labelbox.x2 = lbl.x + strWidth(this[i]) * (lbl.fontsize / fontSize);
+            labelbox.x2 =
+              lbl.x + strWidth(this.options[i]) * (lbl.fontsize / fontSize);
           }
           if (lbl.textanchor == "middle") {
-            var w = strWidth(this[i]) * (lbl.fontsize / fontSize);
+            var w = strWidth(this.options[i]) * (lbl.fontsize / fontSize);
             labelbox.x1 = lbl.x - w / 2;
             labelbox.x2 = lbl.x + w / 2;
           }
           //if(lbl.textanchor == 'middle'){}
           if (lbl.textanchor == "end") {
-            labelbox.x1 = lbl.x - strWidth(this[i]) * (lbl.fontsize / fontSize);
+            labelbox.x1 =
+              lbl.x - strWidth(this.options[i]) * (lbl.fontsize / fontSize);
             labelbox.x2 = lbl.x;
           }
           gbbox.merge(labelbox);
           var text = { type: "text", fontfamily: fontFamily, fill: fontColor };
+          if (lbl.hasOwnProperty("fill")) text.fill = lbl.fill;
           if (lbl.hasOwnProperty("stroke")) text.stroke = lbl.stroke;
           if (lbl.hasOwnProperty("textanchor"))
             text.textanchor = lbl.textanchor;
@@ -55,7 +66,7 @@ export default function textfields() {
             text.fontweight = lbl.fontweight;
           text.x = lbl.x;
           text.y = lbl.y;
-          text.text = this[i];
+          text.text = this.options[i];
           texts.push(text);
         }
       }
@@ -203,21 +214,50 @@ export default function textfields() {
     };
     return t;
   }
-
+  var i, genericSIDC;
   if (this.metadata.numberSIDC) {
     //Number based SIDCs.
-    //var symbolSet = String(this.options.sidc).substr(4, 2);
-    //TODO fix add code for Number based labels
+    if (!ms._labelCache.hasOwnProperty("number")) {
+      ms._labelCache["number"] = {};
+      for (i in ms._labelOverrides["number"]) {
+        if (!ms._labelOverrides["number"].hasOwnProperty(i)) continue;
+        ms._labelOverrides["number"][i].call(this, ms._labelCache["number"]);
+      }
+    }
+    genericSIDC = this.metadata.functionid.substr(0, 6);
+
+    if (
+      this.metadata.controlMeasure &&
+      ms._labelCache["number"].hasOwnProperty(genericSIDC)
+    ) {
+      drawArray2.push(
+        labelOverride.call(this, ms._labelCache["number"][genericSIDC])
+      );
+
+      //outline
+      if (this.style.outlineWidth > 0)
+        drawArray1.push(
+          ms.outline(
+            drawArray2,
+            this.style.outlineWidth,
+            this.style.strokeWidth,
+            typeof this.style.outlineColor === "object"
+              ? this.style.outlineColor[this.metadata.affiliation]
+              : this.style.outlineColor
+          )
+        );
+      return { pre: drawArray1, post: drawArray2, bbox: gbbox };
+    }
   } else {
     //Letter based SIDCs.
     if (!ms._labelCache.hasOwnProperty("letter")) {
       ms._labelCache["letter"] = {};
-      for (var i in ms._labelOverrides["letter"]) {
+      for (i in ms._labelOverrides["letter"]) {
         if (!ms._labelOverrides["letter"].hasOwnProperty(i)) continue;
         ms._labelOverrides["letter"][i].call(this, ms._labelCache["letter"]);
       }
     }
-    var genericSIDC =
+    genericSIDC =
       this.options.sidc.substr(0, 1) +
       "-" +
       this.options.sidc.substr(2, 1) +
@@ -604,6 +644,141 @@ export default function textfields() {
       gbbox.y2 = Math.max(gbbox.y2, 100 + 2.7 * fontSize);
     }
 
+    // Background boxes behind text
+    if (this.style.infoBackground) {
+      var leftBox = { x1: 100, y1: 1000, y2: 0 };
+      var rightBox = { x2: 100, y1: 1000, y2: 0 };
+      if (gStrings.L1)
+        leftBox = {
+          x1: Math.min(leftBox.x1, bbox.x1 - strWidth(gStrings.L1)),
+          x2: bbox.x1 - spaceTextIcon / 2,
+          y1: Math.min(leftBox.y1, 100 - 2.5 * fontSize),
+          y2: Math.max(leftBox.y2, 100 - 1.5 * fontSize + spaceTextIcon / 2)
+        };
+      if (gStrings.L2)
+        leftBox = {
+          x1: Math.min(leftBox.x1, bbox.x1 - strWidth(gStrings.L2)),
+          x2: bbox.x1 - spaceTextIcon / 2,
+          y1: Math.min(leftBox.y1, 100 - 1.5 * fontSize),
+          y2: Math.max(leftBox.y2, 100 - 0.5 * fontSize + spaceTextIcon / 2)
+        };
+      if (gStrings.L3)
+        leftBox = {
+          x1: Math.min(leftBox.x1, bbox.x1 - strWidth(gStrings.L3)),
+          x2: bbox.x1 - spaceTextIcon / 2,
+          y1: Math.min(leftBox.y1, 100 - 0.5 * fontSize),
+          y2: Math.max(leftBox.y2, 100 + 0.5 * fontSize + spaceTextIcon / 2)
+        };
+      if (gStrings.L4)
+        leftBox = {
+          x1: Math.min(leftBox.x1, bbox.x1 - strWidth(gStrings.L4)),
+          x2: bbox.x1 - spaceTextIcon / 2,
+          y1: Math.min(leftBox.y1, 100 + 0.5 * fontSize),
+          y2: Math.max(leftBox.y2, 100 + 1.5 * fontSize + spaceTextIcon / 2)
+        };
+      if (gStrings.L5)
+        leftBox = {
+          x1: Math.min(leftBox.x1, bbox.x1 - strWidth(gStrings.L5)),
+          x2: bbox.x1 - spaceTextIcon / 2,
+          y1: Math.min(leftBox.y1, 100 + 1.5 * fontSize),
+          y2: Math.max(leftBox.y2, 100 + 2.5 * fontSize + spaceTextIcon / 2)
+        };
+      if (leftBox.hasOwnProperty("x2")) {
+        gbbox.x1 -= fontSize / 2;
+        drawArray2.push({
+          type: "path",
+          d:
+            "M " +
+            (leftBox.x1 - fontSize / 2) +
+            "," +
+            (leftBox.y1 + fontSize / 2) +
+            " " +
+            leftBox.x1 +
+            "," +
+            leftBox.y1 +
+            " " +
+            leftBox.x2 +
+            "," +
+            leftBox.y1 +
+            " " +
+            leftBox.x2 +
+            "," +
+            leftBox.y2 +
+            " " +
+            (leftBox.x1 - fontSize / 2) +
+            "," +
+            leftBox.y2 +
+            "z",
+          fill: infoBackground,
+          stroke: infoBackgroundFrame || false
+        });
+      }
+      if (gStrings.R1)
+        rightBox = {
+          x1: bbox.x2 + spaceTextIcon / 2,
+          x2: Math.max(rightBox.x2, bbox.x2 + strWidth(gStrings.R1)),
+          y1: Math.min(rightBox.y1, 100 - 2.5 * fontSize),
+          y2: Math.max(rightBox.y2, 100 - 1.5 * fontSize + spaceTextIcon / 2)
+        };
+      if (gStrings.R2)
+        rightBox = {
+          x1: bbox.x2 + spaceTextIcon / 2,
+          x2: Math.max(rightBox.x2, bbox.x2 + strWidth(gStrings.R2)),
+          y1: Math.min(rightBox.y1, 100 - 1.5 * fontSize),
+          y2: Math.max(rightBox.y2, 100 - 0.5 * fontSize + spaceTextIcon / 2)
+        };
+      if (gStrings.R3)
+        rightBox = {
+          x1: bbox.x2 + spaceTextIcon / 2,
+          x2: Math.max(rightBox.x2, bbox.x2 + strWidth(gStrings.R3)),
+          y1: Math.min(rightBox.y1, 100 - 0.5 * fontSize),
+          y2: Math.max(rightBox.y2, 100 + 0.5 * fontSize + spaceTextIcon / 2)
+        };
+      if (gStrings.R4)
+        rightBox = {
+          x1: bbox.x2 + spaceTextIcon / 2,
+          x2: Math.max(rightBox.x2, bbox.x2 + strWidth(gStrings.R4)),
+          y1: Math.min(rightBox.y1, 100 + 0.5 * fontSize),
+          y2: Math.max(rightBox.y2, 100 + 1.5 * fontSize + spaceTextIcon / 2)
+        };
+      if (gStrings.R5)
+        rightBox = {
+          x1: bbox.x2 + spaceTextIcon / 2,
+          x2: Math.max(rightBox.x2, bbox.x2 + strWidth(gStrings.R5)),
+          y1: Math.min(rightBox.y1, 100 + 1.5 * fontSize),
+          y2: Math.max(rightBox.y2, 100 + 2.5 * fontSize + spaceTextIcon / 2)
+        };
+      if (rightBox.hasOwnProperty("x1")) {
+        gbbox.x2 += fontSize / 2;
+        drawArray2.push({
+          type: "path",
+          d:
+            "M " +
+            rightBox.x1 +
+            "," +
+            rightBox.y1 +
+            " " +
+            (rightBox.x2 + fontSize / 2) +
+            "," +
+            rightBox.y1 +
+            " " +
+            (rightBox.x2 + fontSize / 2) +
+            "," +
+            (rightBox.y2 - fontSize / 2) +
+            " " +
+            rightBox.x2 +
+            "," +
+            rightBox.y2 +
+            " " +
+            rightBox.x1 +
+            "," +
+            rightBox.y2 +
+            "z",
+          fill: infoBackground,
+          stroke: infoBackgroundFrame || false
+        });
+      }
+    }
     //geometries
     if (gStrings.L1)
       drawArray2.push({

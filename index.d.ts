@@ -8,52 +8,64 @@ type ColorMode = {
 
 type SymbolOptions = {
   additionalInformation?: string;
+  alternateMedal?: boolean;
   altitudeDepth?: string;
+  auxiliaryEquipmentIndicator?: string;
+  civilianColor?: boolean;
+  colorMode?: ColorMode | string;
   combatEffectiveness?: string;
   commonIdentifier?: string;
-  direction?: number;
+  country?: string;
+  direction?: string;
   dtg?: string;
+  engagementBar?: string;
+  engagementType?: string;
   equipmentTeardownTime?: string;
   evaluationRating?: string;
+  fill?: boolean;
+  fillOpacity?: number;
+  fontfamily?: string;
+  frame?: boolean;
+  frameColor?: ColorMode;
+  guardedUnit?: string;
   headquartersElement?: string;
   higherFormation?: string;
   hostile?: string;
+  hqStaffLength?: number;
+  icon?: boolean;
+  iconColor?: ColorMode | string;
   iffSif?: string;
+  infoBackground?: ColorMode | string;
+  infoBackgroundFrame?: ColorMode | string;
+  infoColor?: ColorMode | string;
+  infoFields?: boolean;
+  infoSize?: number;
+  installationComposition?: string;
   location?: string;
+  monoColor?: string;
+  outlineColor?: ColorMode | string;
+  outlineWidth?: number;
+  padding?: number;
   platformType?: string;
   quantity?: string;
   reinforcedReduced?: string;
   sigint?: string;
   signatureEquipment?: string;
+  simpleStatusModifier?: boolean;
+  size?: number;
+  specialDesignator?: string;
   specialHeadquarters?: string;
   speed?: string;
   speedLeader?: number;
+  square?: boolean;
   staffComments?: string;
+  standard?: string;
+  strokeWidth?: number;
   type?: string;
   uniqueDesignation?: string;
-  alternateMedal?: boolean;
-  civilianColor?: boolean;
-  colorMode?: ColorMode | string;
-  fill?: boolean;
-  fillOpacity?: number;
-  frame?: boolean;
-  frameColor?: ColorMode | string;
-  hqStafLength?: number;
-  icon?: boolean;
-  iconColor?: ColorMode | string;
-  infoColor?: ColorMode | string;
-  infoFields?: boolean;
-  infoSize?: number;
-  monoColor?: string;
-  outlineColor?: ColorMode | string;
-  outlineWidth?: number;
-  simpleStatusModifier?: boolean;
-  strokeWidth?: number;
-  size?: number;
-  square?: boolean;
 };
 
-type SymbolProperties = {
+type SymbolMetadata = {
   activity: boolean; // Is it an Activity
   affiliation: string; // Affiliation it is shown as (Friend/Hostile...)
   baseAffilation: string; // Affiliation it belongs to (Friend/Hostile...)
@@ -97,9 +109,6 @@ export class Symbol {
     style?: SymbolOptions
   );
 
-  width: number;
-  height: number;
-
   asCanvas(factor?: number): HTMLCanvasElement;
   asDOM(): Element;
   asSVG(): string;
@@ -107,7 +116,7 @@ export class Symbol {
   getColors(): SymbolColors;
   getOctagonAnchor(): { x: number; y: number };
   getOptions(includeStyle?: boolean): SymbolOptions;
-  getProperties(): SymbolProperties;
+  getMetadata(): SymbolMetadata;
   getSize(): { width: number; height: number };
   getStyle(): SymbolOptions;
   isValid(extended?: boolean): boolean | Object;

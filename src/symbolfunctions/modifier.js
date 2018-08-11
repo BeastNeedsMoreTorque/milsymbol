@@ -1,6 +1,5 @@
 //Symbol Modifiers #######################################################################
-import { ms } from "../ms.js";
-export default function modifier() {
+export default function modifier(ms) {
   var drawArray1 = [];
   var drawArray2 = [];
   var bbox = new ms.BBox(this.metadata.baseGeometry.bbox); // clone the bbox
@@ -12,7 +11,7 @@ export default function modifier() {
   if (this.metadata.headquarters) {
     //HEADQUARTERS
     var y = 100;
-    var hqStafLength = Number(this.style.hqStafLength || ms._hqStafLength);
+    var hqStaffLength = Number(this.style.hqStaffLength || ms._hqStaffLength);
     if (
       [
         "AirFriend",
@@ -39,7 +38,7 @@ export default function modifier() {
         " L" +
         bbox.x1 +
         "," +
-        (bbox.y2 + hqStafLength)
+        (bbox.y2 + hqStaffLength)
     };
 
     //outline
@@ -56,7 +55,7 @@ export default function modifier() {
       );
 
     drawArray2.push(geom);
-    gbbox.y2 = bbox.y2 + hqStafLength;
+    gbbox.y2 = bbox.y2 + hqStaffLength;
   }
   if (this.metadata.taskForce) {
     //TASK FORCE
@@ -488,17 +487,17 @@ export default function modifier() {
     var mobilities = {
       "Wheeled limited cross country": {
         g: [
-          { type: "path", d: "M 50,1 l 100,0" },
-          { type: "circle", cx: 55, cy: 8, r: 8 },
-          { type: "circle", cx: 145, cy: 8, r: 8 }
+          { type: "path", d: "M 53,1 l 94,0" },
+          { type: "circle", cx: 58, cy: 8, r: 8 },
+          { type: "circle", cx: 142, cy: 8, r: 8 }
         ],
         bbox: { y2: bbox.y2 + 8 * 2 }
       },
       "Wheeled cross country": {
         g: [
-          { type: "path", d: "M 50,1 l 100,0" },
-          { type: "circle", cx: 55, cy: 8, r: 8 },
-          { type: "circle", cx: 145, cy: 8, r: 8 },
+          { type: "path", d: "M 53,1 l 94,0" },
+          { type: "circle", cx: 58, cy: 8, r: 8 },
+          { type: "circle", cx: 142, cy: 8, r: 8 },
           { type: "circle", cx: 100, cy: 8, r: 8 }
         ],
         bbox: { y2: bbox.y2 + 8 * 2 }
@@ -507,36 +506,36 @@ export default function modifier() {
         g: [
           {
             type: "path",
-            d: "M 50,1 l 100,0 c15,0 15,15 0,15 l -100,0 c-15,0 -15,-15 0,-15"
+            d: "M 53,1 l 100,0 c15,0 15,15 0,15 l -100,0 c-15,0 -15,-15 0,-15"
           }
         ],
         bbox: { y2: bbox.y2 + 18, x1: 42, x2: 168 }
       },
       "Wheeled and tracked combination": {
         g: [
-          { type: "circle", cx: 55, cy: 8, r: 8 },
+          { type: "circle", cx: 58, cy: 8, r: 8 },
           {
             type: "path",
-            d: "M 80,1 l 70,0 c15,0 15,15 0,15 l -70,0 c-15,0 -15,-15 0,-15"
+            d: "M 83,1 l 70,0 c15,0 15,15 0,15 l -70,0 c-15,0 -15,-15 0,-15"
           }
         ],
         bbox: { y2: bbox.y2 + 8 * 2, x2: 168 }
       },
       Towed: {
         g: [
-          { type: "path", d: "M 60,1 l 80,0" },
-          { type: "circle", cx: 55, cy: 3, r: 8 },
-          { type: "circle", cx: 145, cy: 3, r: 8 }
+          { type: "path", d: "M 63,1 l 74,0" },
+          { type: "circle", cx: 58, cy: 3, r: 8 },
+          { type: "circle", cx: 142, cy: 3, r: 8 }
         ],
         bbox: { y2: bbox.y2 + 10 }
       },
       Rail: {
         g: [
-          { type: "path", d: "M 50,1 l 100,0" },
-          { type: "circle", cx: 55, cy: 8, r: 8 },
-          { type: "circle", cx: 70, cy: 8, r: 8 },
-          { type: "circle", cx: 130, cy: 8, r: 8 },
-          { type: "circle", cx: 145, cy: 8, r: 8 }
+          { type: "path", d: "M 53,1 l 96,0" },
+          { type: "circle", cx: 58, cy: 8, r: 8 },
+          { type: "circle", cx: 73, cy: 8, r: 8 },
+          { type: "circle", cx: 127, cy: 8, r: 8 },
+          { type: "circle", cx: 142, cy: 8, r: 8 }
         ],
         bbox: { y2: bbox.y2 + 8 * 2 }
       },
@@ -646,11 +645,5 @@ export default function modifier() {
       drawArray2[i].strokewidth = this.style.strokeWidth;
   }
 
-  /*
-	if(this.options.sigint){
-		g += '<text font-family="Arial" font-weight="bold" stroke="none" text-anchor="middle" x="100" y="'+ (30 + bbox.y2 )+'" font-size="35" >'+this.options.sigint+'</text>';
-		gbbox.merge({y2:(bbox.y2-28)});
-	}
-	g += '</g>';*/
   return { pre: drawArray1, post: drawArray2, bbox: gbbox };
 }

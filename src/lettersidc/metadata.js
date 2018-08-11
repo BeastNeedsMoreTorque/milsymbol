@@ -1,5 +1,5 @@
-import { ms } from "../ms.js";
-export function metadata(metadata, mapping) {
+//import { ms } from "../ms.js";
+export function metadata(ms, metadata, mapping) {
   this.options.sidc = this.options.sidc.toUpperCase();
 
   var codingscheme =
@@ -48,6 +48,8 @@ export function metadata(metadata, mapping) {
   if (codingscheme == "O" && ["V", "O", "R"].indexOf(battledimension) > -1) {
     metadata.activity = true;
   }
+  //SymbolSets that are control-measure
+  if (codingscheme == "G") metadata.controlMeasure = true;
   //symbolmodifier11 that are Installations
   if (symbolmodifier11 == "H") metadata.installation = true;
   //Planned/Anticipated/Suspect symbols should have a dashed outline
@@ -129,6 +131,9 @@ export function metadata(metadata, mapping) {
     metadata.feintDummy = true;
   }
   if (["A", "B", "C", "D"].indexOf(symbolmodifier11) > -1) {
+    metadata.headquarters = true;
+  }
+  if (battledimension == "G" && functionid == "UH----") {
     metadata.headquarters = true;
   }
   if (["E", "B", "G", "D"].indexOf(symbolmodifier11) > -1) {
@@ -318,9 +323,9 @@ export function metadata(metadata, mapping) {
       "NA----"
     ].indexOf(functionid) > -1
   ) {
-    if (ms._STD2525) {
+    if (metadata.STD2525) {
       metadata.fill = false;
-      if (metadata.functionid == "WD----") {
+      if (functionid == "WD----") {
         metadata.fill = true;
       }
       if (
